@@ -12,13 +12,26 @@ import {
 } from "../state/device-order";
 import AirConditionerActions from "./AirConditionerActions";
 import DeviceDetail from "./DeviceDetail";
+import Hub2Dashboard from "./Hub2Dashboard";
+import InfraredRemoteActions from "./InfraredRemoteActions";
 
 function isAirConditioner(device: SwitchBotDevice) {
   return device.category === "ir" && device.type === "Air Conditioner";
 }
 
+function isInfraredRemote(device: SwitchBotDevice) {
+  return device.category === "ir" && (device.type === "TV" || device.type === "Light");
+}
+
+function isHub2(device: SwitchBotDevice) {
+  return device.category === "physical" && device.type === "Hub 2";
+}
+
 function getDeviceIcon(device: SwitchBotDevice) {
   if (isAirConditioner(device)) return Icon.Snowflake;
+  if (device.category === "ir" && device.type === "TV") return Icon.Monitor;
+  if (device.category === "ir" && device.type === "Light") return Icon.LightBulb;
+  if (isHub2(device)) return Icon.Gauge;
   if (device.category === "ir") return Icon.Switch;
   return Icon.House;
 }
@@ -72,6 +85,10 @@ export default function DeviceList() {
       {devices.map((device) => {
         const target = isAirConditioner(device) ? (
           <AirConditionerActions device={device} />
+        ) : isInfraredRemote(device) ? (
+          <InfraredRemoteActions device={device} />
+        ) : isHub2(device) ? (
+          <Hub2Dashboard device={device} />
         ) : (
           <DeviceDetail device={device} />
         );

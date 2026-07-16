@@ -81,6 +81,17 @@ export interface HistoryData {
   entries: AuditEntry[];
 }
 
+export type IrRemoteCommand =
+  | "turnOn"
+  | "turnOff"
+  | "brightnessUp"
+  | "brightnessDown"
+  | "volumeAdd"
+  | "volumeSub"
+  | "channelAdd"
+  | "channelSub"
+  | "SetChannel";
+
 export type AcMode = "auto" | "cool" | "dry" | "fan" | "heat";
 export type AcFan = "auto" | "low" | "mid" | "high";
 

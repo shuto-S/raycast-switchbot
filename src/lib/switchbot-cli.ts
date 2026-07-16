@@ -9,6 +9,7 @@ import {
   DeviceListData,
   DeviceMetadataRecord,
   HistoryData,
+  IrRemoteCommand,
   SwitchBotDevice,
 } from "./types";
 
@@ -159,15 +160,20 @@ export function getCommandHistory(): Promise<HistoryData> {
   return runSwitchBotJson<HistoryData>(["--json", "history", "show", "--limit", "200"]);
 }
 
-export function sendAcPower(deviceId: string, power: "on" | "off"): Promise<unknown> {
+export function sendIrRemoteCommand(deviceId: string, command: IrRemoteCommand, parameter?: string): Promise<unknown> {
   return runSwitchBotJson<unknown>([
     "--audit-log",
     "--json",
     "devices",
     "command",
     deviceId,
-    power === "on" ? "turnOn" : "turnOff",
+    command,
+    ...(parameter === undefined ? [] : [parameter]),
   ]);
+}
+
+export function sendAcPower(deviceId: string, power: "on" | "off"): Promise<unknown> {
+  return sendIrRemoteCommand(deviceId, power === "on" ? "turnOn" : "turnOff");
 }
 
 export function sendAcSettings(deviceId: string, settings: AcSettings): Promise<unknown> {
