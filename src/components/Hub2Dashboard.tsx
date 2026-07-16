@@ -61,10 +61,13 @@ export default function Hub2Dashboard({ device }: { device: SwitchBotDevice }) {
   const version = stringValue(status, "version");
   const markdown = [
     `# ${device.name}`,
-    temperature === undefined ? "## —" : `## ${temperature}℃`,
-    [`湿度 **${humidity === undefined ? "—" : `${humidity}%`}**`, `照度 **${lightLevel ?? "—"}**`].join("  ·  "),
-    error ? `⚠️ 現在値を取得できません  \n${getCliErrorDescription(error)}` : "> SwitchBot APIから取得した現在値",
-  ].join("\n\n");
+    `## 温度&emsp;${temperature === undefined ? "—" : `${temperature}℃`}`,
+    `## 湿度&emsp;${humidity === undefined ? "—" : `${humidity}%`}`,
+    `## 照度&emsp;${lightLevel ?? "—"}`,
+    error ? `⚠️ 情報を取得できません  \n${getCliErrorDescription(error)}` : undefined,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   return (
     <Detail
@@ -73,10 +76,6 @@ export default function Hub2Dashboard({ device }: { device: SwitchBotDevice }) {
       markdown={markdown}
       metadata={
         <Detail.Metadata>
-          <Detail.Metadata.Label title="温度" text={temperature === undefined ? "—" : `${temperature}℃`} />
-          <Detail.Metadata.Label title="湿度" text={humidity === undefined ? "—" : `${humidity}%`} />
-          <Detail.Metadata.Label title="照度" text={lightLevel === undefined ? "—" : String(lightLevel)} />
-          <Detail.Metadata.Separator />
           <Detail.Metadata.Label title="取得日時" text={formatUpdatedAt(updatedAt)} />
           <Detail.Metadata.Label title="部屋" text={device.roomName ?? "—"} />
           <Detail.Metadata.Label title="ファームウェア" text={version ?? "—"} />

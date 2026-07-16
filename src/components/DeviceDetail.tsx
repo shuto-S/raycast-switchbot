@@ -53,9 +53,7 @@ export default function DeviceDetail({ device }: { device: SwitchBotDevice }) {
 
   const markdown = [
     `# ${device.name}`,
-    description?.catalog?.description,
     error ? "状態と詳細を取得できませんでした。基本情報のみ表示しています。" : undefined,
-    device.category === "ir" ? "> 赤外線デバイスの実機状態は取得できません。" : undefined,
   ]
     .filter(Boolean)
     .join("\n\n");

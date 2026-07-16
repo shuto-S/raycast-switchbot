@@ -49,7 +49,6 @@ export default function TelevisionChannelForm({ onSubmit }: { onSubmit: (channel
       }
     >
       <Form.TextField id="channel" title="チャンネル" placeholder="1〜999" autoFocus />
-      <Form.Description text="IR信号を送信します。テレビの実機状態や選局結果は確認できません。" />
     </Form>
   );
 }

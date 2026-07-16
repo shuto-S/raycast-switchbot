@@ -149,7 +149,6 @@ export default function AirConditionerActions({ device }: { device: SwitchBotDev
       lastSentState.fan ? `風量 ${AC_FAN_LABELS[lastSentState.fan]}` : "風量 —",
     ].join("  ·  "),
     `**送信日時**  ${formatLastSentAt(lastSentState.lastSentAt)}`,
-    "> 最終送信値・実機未確認",
     historyError ? `⚠️ 監査ログを取得できません  \n${getCliErrorDescription(historyError)}` : undefined,
   ]
     .filter(Boolean)
@@ -194,11 +193,10 @@ export default function AirConditionerActions({ device }: { device: SwitchBotDev
       navigationTitle={device.name}
       searchBarPlaceholder="操作を選択"
     >
-      <List.Section title="操作" subtitle="右側は最終送信値・実機未確認">
+      <List.Section title="操作">
         <List.Item
           icon={Icon.Power}
           title="ON"
-          subtitle="IR信号を送信"
           detail={renderStateDetail()}
           actions={
             <ActionPanel>
@@ -216,7 +214,6 @@ export default function AirConditionerActions({ device }: { device: SwitchBotDev
         <List.Item
           icon={Icon.Power}
           title="OFF"
-          subtitle="IR信号を送信"
           detail={renderStateDetail()}
           actions={
             <ActionPanel>
@@ -260,7 +257,6 @@ export default function AirConditionerActions({ device }: { device: SwitchBotDev
         <List.Item
           icon={Icon.Snowflake}
           title="運転設定"
-          subtitle="モード、温度、風量を選択"
           detail={renderStateDetail()}
           actions={
             <ActionPanel>

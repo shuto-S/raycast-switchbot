@@ -63,7 +63,6 @@ export default function AirConditionerForm({ onSubmit }: { onSubmit: (settings: 
         <Form.Dropdown.Item value="mid" title="中" />
         <Form.Dropdown.Item value="high" title="強" />
       </Form.Dropdown>
-      <Form.Description text="IR信号を送信します。最終送信値は監査ログに記録されますが、実機状態は確認できません。" />
     </Form>
   );
 }

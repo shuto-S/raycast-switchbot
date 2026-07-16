@@ -114,7 +114,6 @@ export default function InfraredRemoteActions({ device }: { device: SwitchBotDev
     `# ${device.name}`,
     `## ${formatIrCommand(lastSentState)}`,
     `**送信日時**  ${formatIrLastSentAt(lastSentState.lastSentAt)}`,
-    "> 最終送信操作・実機未確認",
     historyError ? `⚠️ 監査ログを取得できません  \n${getCliErrorDescription(historyError)}` : undefined,
   ]
     .filter(Boolean)
@@ -172,13 +171,12 @@ export default function InfraredRemoteActions({ device }: { device: SwitchBotDev
       navigationTitle={device.name}
       searchBarPlaceholder="操作を選択"
     >
-      <List.Section title="操作" subtitle="右側は最終送信操作・実機未確認">
+      <List.Section title="操作">
         {operations.map((operation) => (
           <List.Item
             key={operation.command}
             icon={operation.icon}
             title={operation.title}
-            subtitle="IR信号を送信"
             detail={renderStateDetail()}
             actions={renderActionPanel(operation)}
           />
