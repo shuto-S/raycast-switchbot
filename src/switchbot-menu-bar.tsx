@@ -1,4 +1,4 @@
-import { environment, Icon, launchCommand, LaunchType, LocalStorage, MenuBarExtra } from "@raycast/api";
+import { Cache, environment, Icon, launchCommand, LaunchType, LocalStorage, MenuBarExtra } from "@raycast/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { asSwitchBotCliError, getCliErrorDescription, SwitchBotCliError } from "./lib/cli-errors";
 import { formatMenuBarDeviceStatus, MenuBarDeviceStatus } from "./lib/menu-bar-status";
@@ -11,9 +11,21 @@ import {
   restoreAcLastSentState,
 } from "./state/ac-command-history";
 import { restoreIrLastSentState } from "./state/ir-command-history";
+import {
+  MENU_BAR_CACHE_KEY,
+  MenuBarSnapshot,
+  parseMenuBarSnapshot,
+  shouldRefreshMenuBar,
+} from "./state/menu-bar-cache";
 import { MENU_BAR_ENABLED_KEY, shouldShowMenuBar } from "./state/menu-bar-settings";
 
 const MENU_BAR_DEVICE_KEY = "menu-bar-device-id";
+const menuBarCache = new Cache({ namespace: "switchbot-menu-bar" });
+const initialSnapshot = parseMenuBarSnapshot(menuBarCache.get(MENU_BAR_CACHE_KEY));
+
+function saveSnapshot(snapshot: MenuBarSnapshot) {
+  menuBarCache.set(MENU_BAR_CACHE_KEY, JSON.stringify(snapshot));
+}
 
 function getDeviceIcon(device?: SwitchBotDevice) {
   if (!device) return Icon.Switch;
@@ -44,11 +56,13 @@ async function loadDeviceStatus(device: SwitchBotDevice): Promise<MenuBarDeviceS
 }
 
 export default function SwitchBotMenuBar() {
-  const [devices, setDevices] = useState<SwitchBotDevice[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>();
-  const [status, setStatus] = useState<MenuBarDeviceStatus>();
+  const [devices, setDevices] = useState<SwitchBotDevice[]>(initialSnapshot?.devices ?? []);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(initialSnapshot?.selectedDeviceId);
+  const [status, setStatus] = useState<MenuBarDeviceStatus | undefined>(initialSnapshot?.status);
   const [error, setError] = useState<SwitchBotCliError>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(
+    environment.launchType === LaunchType.Background || initialSnapshot === undefined,
+  );
   const [isEnabled, setIsEnabled] = useState(true);
 
   const selectedDevice = useMemo(
@@ -56,13 +70,20 @@ export default function SwitchBotMenuBar() {
     [devices, selectedDeviceId],
   );
 
-  const refreshStatus = useCallback(async (device: SwitchBotDevice) => {
+  const refreshStatus = useCallback(async (device: SwitchBotDevice, listedDevices: SwitchBotDevice[]) => {
     setIsLoading(true);
     setError(undefined);
     try {
-      setStatus(await loadDeviceStatus(device));
+      const nextStatus = await loadDeviceStatus(device);
+      setStatus(nextStatus);
+      saveSnapshot({
+        devices: listedDevices,
+        selectedDeviceId: device.deviceId,
+        status: nextStatus,
+        updatedAt: Date.now(),
+      });
     } catch (loadError) {
-      setStatus(formatMenuBarDeviceStatus(device));
+      setStatus((currentStatus) => currentStatus ?? formatMenuBarDeviceStatus(device));
       setError(asSwitchBotCliError(loadError));
     } finally {
       setIsLoading(false);
@@ -82,6 +103,10 @@ export default function SwitchBotMenuBar() {
       }
       setIsEnabled(true);
       if (isUserInitiated && storedEnabled === false) await LocalStorage.setItem(MENU_BAR_ENABLED_KEY, true);
+      if (!shouldRefreshMenuBar(initialSnapshot !== undefined, environment.launchType === LaunchType.Background)) {
+        setIsLoading(false);
+        return;
+      }
 
       const [listedDevices, storedDeviceId] = await Promise.all([
         listDevices(),
@@ -95,11 +120,12 @@ export default function SwitchBotMenuBar() {
       setSelectedDeviceId(device?.deviceId);
       if (!device) {
         setStatus(undefined);
+        saveSnapshot({ devices: listedDevices, updatedAt: Date.now() });
         setIsLoading(false);
         return;
       }
       if (device.deviceId !== storedDeviceId) await LocalStorage.setItem(MENU_BAR_DEVICE_KEY, device.deviceId);
-      await refreshStatus(device);
+      await refreshStatus(device, listedDevices);
     } catch (loadError) {
       setDevices([]);
       setStatus(undefined);
@@ -114,12 +140,14 @@ export default function SwitchBotMenuBar() {
 
   const selectDevice = useCallback(
     async (device: SwitchBotDevice) => {
+      const nextStatus = formatMenuBarDeviceStatus(device);
       setSelectedDeviceId(device.deviceId);
-      setStatus(formatMenuBarDeviceStatus(device));
+      setStatus(nextStatus);
+      saveSnapshot({ devices, selectedDeviceId: device.deviceId, status: nextStatus, updatedAt: Date.now() });
       await LocalStorage.setItem(MENU_BAR_DEVICE_KEY, device.deviceId);
-      await refreshStatus(device);
+      await refreshStatus(device, devices);
     },
-    [refreshStatus],
+    [devices, refreshStatus],
   );
 
   const disableMenuBar = useCallback(async () => {
@@ -166,7 +194,7 @@ export default function SwitchBotMenuBar() {
           <MenuBarExtra.Item
             title="再取得"
             icon={Icon.ArrowClockwise}
-            onAction={() => void refreshStatus(selectedDevice)}
+            onAction={() => void refreshStatus(selectedDevice, devices)}
           />
         ) : null}
         <MenuBarExtra.Item
