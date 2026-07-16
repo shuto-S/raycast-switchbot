@@ -16,6 +16,13 @@
       "title": "SwitchBot",
       "description": "SwitchBotデバイスをCLI経由で操作",
       "mode": "view"
+    },
+    {
+      "name": "switchbot-menu-bar",
+      "title": "SwitchBot Menu Bar",
+      "description": "選択したSwitchBotデバイスをメニューバーに表示",
+      "mode": "menu-bar",
+      "interval": "5m"
     }
   ],
   "preferences": [
